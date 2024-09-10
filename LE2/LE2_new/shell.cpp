@@ -14,7 +14,8 @@ int main () {
     // TODO: add functionality
     // Create pipe
     //this array will hold the fild descriptors of the pipe
-    int fd[2]; //pipefd[0] is for reading and pipefd[1] is for writing
+    //pipefd[0] is for reading and pipefd[1] is for writing
+    int fd[2]; 
 
     //check if pipe creation is successful
     if(pipe(fd) == -1){
@@ -24,7 +25,7 @@ int main () {
         exit(EXIT_FAILURE); 
     }
 
-    // // Create child to run first command
+    // Create child to run first command
     pid_t firstChildPid = fork(); //creates two processes
     if(firstChildPid < 0){
         // cerr << "Fork failed" << endl;
@@ -33,13 +34,26 @@ int main () {
         exit(EXIT_FAILURE); 
     }
     // In child, redirect output to write end of pipe
-    if(firstChildPid > 0){ //forked child process sucessfully 
-        dup2(fd[1], 1); 
+    //forked child process sucessfully 
+    if(firstChildPid == 0){ 
+        //stdout is redirected to fd[1] which means any data sent to stdout will 
+        //now go into the pipe instead of the terminal
+        //enables redirection of output from ls to the pipe to be processed by the 
+        //next command
+        //you want to send data to fd[1] and 1 is the fd for standard output
+        dup2(fd[1], 1); //STDOUT_FILENO = 1
     
         // Close the read end of the pipe on the child side.
         close(fd[0]); 
+        //fd[1] is no longer needed after redirection
+        //prevent accidental writes
+        close(fd[1]); 
         // In child, execute the command
-        execvp("ls", cmd1); 
+        execvp("ls", cmd1); // "ls" == cmd1[0]
+
+        //error message if exexcvp fails
+        // cerr << "Exec failed" << endl;
+        // return 1; 
     }
     // Create another child to run second command
     pid_t secondChildPid = fork(); 
@@ -58,3 +72,5 @@ int main () {
     }
     // Reset the input and output file descriptors of the parent.
 }
+// return is 0 you are in child
+// positive, you are sitll in the parent process
