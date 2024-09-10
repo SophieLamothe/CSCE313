@@ -47,7 +47,7 @@ int main () {
         close(fd[0]); 
         //fd[1] is no longer needed after redirection
         //prevent accidental writes
-        close(fd[1]); 
+        // close(fd[1]); 
         // In child, execute the command
         execvp("ls", cmd1); // "ls" == cmd1[0]
 
@@ -69,8 +69,14 @@ int main () {
         close(fd[1]); 
         // Execute the second command.
         execvp("tr", cmd2); 
+        //error message if exexcvp fails
+        // cerr << "Exec failed" << endl;
+        // return 1; 
     }
     // Reset the input and output file descriptors of the parent.
+    //fd are no longer needed from the parent
+    close(fd[0]);
+    close(fd[1]); 
 }
 // return is 0 you are in child
 // positive, you are sitll in the parent process
