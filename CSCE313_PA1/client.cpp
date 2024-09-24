@@ -110,10 +110,11 @@ int main (int argc, char *argv[]) {
 		//Task 3:
 		//Request files
 		filemsg fm(0, 0);
-		string fname = "1.csv";
+		string fname = filename;
 		
 		int len = sizeof(filemsg) + (fname.size() + 1);
 		char* buf2 = new char[len];
+		//store file message in buf2
 		memcpy(buf2, &fm, sizeof(filemsg));
 		strcpy(buf2 + sizeof(filemsg), fname.c_str());
 		chan.cwrite(buf2, len);
@@ -122,6 +123,23 @@ int main (int argc, char *argv[]) {
 		__int64_t file_length;
 		chan.cread(&file_length, sizeof(__int64_t));
 		cout << "The length of " << fname << " is " << file_length << endl;
+		//send series of messages to get content of the file
+		//calculate the number of requests to transfer the file
+		int num_requests = ceil(file_length/256);
+		for(int i = 0; i < num_requests; i++){
+			int curr_offset = i * 256;
+			int curr_len = 256; 
+			if(curr_offset + 256 > file_length){
+				int curr_len = file_length - curr_offset;  
+			}
+			filemsg curr_msg(curr_offset, curr_len);
+			chan.cwrite(&curr_msg, sizeof(curr_msg)); 
+			//store file message in buf2
+		memcpy(buf2, &fm, sizeof(filemsg));
+		strcpy(buf2 + sizeof(filemsg), fname.c_str());
+			char request; 
+			chan.cread()
+		}
 		
 		//Task 5:
 		// Closing all the channels
