@@ -21,7 +21,7 @@ using namespace std;
 int main (int argc, char *argv[]) {
 	int opt;
 	int p = 1;
-	double t = 0.0;
+	double t = 0.00;
 	int e = 1;
 	string filename = "";
 
@@ -65,11 +65,15 @@ int main (int argc, char *argv[]) {
 		//Task 2:
 		//Request data points
 		char buf[MAX_MESSAGE];
-		datamsg x(1, 0.0, 1);
+		//construct data message with the right parameters
+		datamsg x(p, t, e);
 		
+		//copies data massage x to the buffer
 		memcpy(buf, &x, sizeof(datamsg));
+		//write request is sent to the server
 		chan.cwrite(buf, sizeof(datamsg));
 		double reply;
+		//read response is stored in reply
 		chan.cread(&reply, sizeof(double));
 		cout << "For person " << p << ", at time " << t << ", the value of ecg " << e << " is " << reply << endl;
 		
