@@ -11,8 +11,8 @@
 	Date: 09/29/2024
 */
 #include "common.h"
-#include "FIFORequestChannel.h" //for wait
-#include <sys/wait.h>
+#include "FIFORequestChannel.h" 
+#include <sys/wait.h> //for wait
 #include <unistd.h> //for fork and execvp
 
 using namespace std;
@@ -76,6 +76,36 @@ int main (int argc, char *argv[]) {
 		//read response is stored in reply
 		chan.cread(&reply, sizeof(double));
 		cout << "For person " << p << ", at time " << t << ", the value of ecg " << e << " is " << reply << endl;
+		
+		//Request 1000 data points for both ecg for given patient
+		ofstream outputFile("x1.csv");
+		if(!outputFile.is_open()){
+			cerr << "Error opening file" << endl; 
+			exit(1); //error with opening file
+		}
+
+		double time_interval = 0.004; //Calculated interval for each ecg data point (4ms)
+		double time = 0.0; 
+
+		for(int i = 0; i < 1000; i++){
+			//request ecg1
+			datamsg message1(p, time, 1);
+			chan.cwrite(&message1, sizeof(datamsg));
+			double ecg1;
+			chan.cread(&ecg1, sizeof(double)); 
+			//request ecg2
+			datamsg message2(p,time,2);
+			chan.cwrite(&message2, sizeof(message2));
+			double ecg2; 
+			chan.cread(&ecg2, sizeof(double)); 
+
+			//write into data to the file
+			outputFile << time << "," << ecg1 << "," << ecg2 << endl; 
+			//increment to next time point
+			time += time_interval; 
+		}
+		//close file
+		outputFile.close();
 		
 		//Task 3:
 		//Request files
