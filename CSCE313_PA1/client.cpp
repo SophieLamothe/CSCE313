@@ -119,27 +119,62 @@ int main (int argc, char *argv[]) {
 		strcpy(buf2 + sizeof(filemsg), fname.c_str());
 		chan.cwrite(buf2, len);
 
-		delete[] buf2;
+		
 		__int64_t file_length;
 		chan.cread(&file_length, sizeof(__int64_t));
 		cout << "The length of " << fname << " is " << file_length << endl;
+
+		string received_file = "received/" + fname;
+		ofstream outFile(received_file, ios::binary); 
+		if(!outFile.is_open()){
+			//move delete operation here so that if the file cannot 
+			//be opened it is deleted in here
+			delete[] buf2;
+			cerr << "Cannot open file" << endl; 
+			exit(1); 
+		}
 		//send series of messages to get content of the file
 		//calculate the number of requests to transfer the file
-		int num_requests = ceil(file_length/256);
-		for(int i = 0; i < num_requests; i++){
-			int curr_offset = i * 256;
-			int curr_len = 256; 
-			if(curr_offset + 256 > file_length){
-				int curr_len = file_length - curr_offset;  
-			}
-			filemsg curr_msg(curr_offset, curr_len);
-			chan.cwrite(&curr_msg, sizeof(curr_msg)); 
-			//store file message in buf2
-		memcpy(buf2, &fm, sizeof(filemsg));
-		strcpy(buf2 + sizeof(filemsg), fname.c_str());
-			char request; 
-			chan.cread()
+		__int64_t offset = 0; 
+		const int chunk_len = MAX_MESSAGE;
+
+		while(offset < file_length){
+			int bytes_to_read = min(chunk_len, static_cast<int>(file_length - offset));
+			//use current offset and chunk size for filemsg
+			filemsg curr_fmsg(offset, bytes_to_read);
+			memcpy(buf2, &curr_fmsg, sizeof(curr_fmsg)); 
+			strcpy(buf2 + sizeof(filemsg), fname.c_str());
+
+			//request the chunk
+			chan.cwrite(buf2, len);
+			char* file_data = new char[bytes_to_read];
+			chan.cread(file_data, bytes_to_read); 
+			//write to output file
+			outFile.write(file_data, bytes_to_read); 
+			//update offset
+			offset += bytes_to_read;
+			//deallocate memory of file data buffer after each use
+			delete[] file_data; 
 		}
+
+		//close output file
+		outFile.close();
+		delete[] buf2; 
+		// int num_requests = ceil(file_length/256);
+		// for(int i = 0; i < num_requests; i++){
+		// 	int curr_offset = i * 256;
+		// 	int curr_len = 256; 
+		// 	if(curr_offset + 256 > file_length){
+		// 		int curr_len = file_length - curr_offset;  
+		// 	}
+		// 	filemsg curr_msg(curr_offset, curr_len);
+		// 	chan.cwrite(&curr_msg, sizeof(curr_msg)); 
+		// 	//store file message in buf2
+		// memcpy(buf2, &fm, sizeof(filemsg));
+		// strcpy(buf2 + sizeof(filemsg), fname.c_str());
+		// 	char request; 
+		// 	chan.cread()
+		// }
 		
 		//Task 5:
 		// Closing all the channels
