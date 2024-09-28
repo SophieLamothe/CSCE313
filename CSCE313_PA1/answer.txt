@@ -1,0 +1,12 @@
+File transfer time for 100MB file:
+
+File: test_100MB.bin
+File size: 100 100MB
+Time taken: 18,292 ms
+
+What is the main bottleneck?
+The main bottleneck appears to be the buffer size used during the trasnfer. Since
+we are transfering in chunks of 256 bytes, the client and the server must communicate
+multiple times to transfer all chunks of the file. Increasing the buffer size would
+like reduce the amount of I/0 operations to speed up the transfer. Factors like CPU
+usage may also contribute to the delay.
