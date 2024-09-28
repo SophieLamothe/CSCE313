@@ -17,16 +17,16 @@
 
 using namespace std;
 
-
 int main (int argc, char *argv[]) {
 	int opt;
 	int p = 1;
 	double t = 0.00;
 	int e = 1;
 	string filename = "";
+	bool use_new_channel = false; 
 
 	//Add other arguments here
-	while ((opt = getopt(argc, argv, "p:t:e:f:")) != -1) {
+	while ((opt = getopt(argc, argv, "p:t:e:f:c")) != -1) {
 		switch (opt) {
 			case 'p':
 				p = atoi (optarg);
@@ -39,6 +39,10 @@ int main (int argc, char *argv[]) {
 				break;
 			case 'f':
 				filename = optarg;
+				break;
+			case 'c':
+				//Used for Task 4 w/ cmd arg -c
+				use_new_channel = true;
 				break;
 		}
 	}
@@ -61,7 +65,20 @@ int main (int argc, char *argv[]) {
 
 		//Task 4:
 		//Request a new channel
-		
+		FIFORequestChannel* new_channel = &chan; 
+		if(use_new_channel){
+			//send NEWCHANNEL_MSG to server
+			MESSAGE_TYPE new_channel_msg = NEWCHANNEL_MSG;
+			chan.cwrite(&new_channel_msg, sizeof(new_channel_msg));
+
+			//receive name of new channel from server
+			char new_channel_name[30];
+			chan.cread(&new_channel_name, sizeof(new_channel_name)); 
+
+			//create new FIFORequestChannel w/ received channel
+			new_channel = new FIFORequestChannel(new_channel_name, FIFORequestChannel::CLIENT_SIDE);	
+		}
+
 		//Task 2:
 		//Request data points
 		char buf[MAX_MESSAGE];
@@ -179,7 +196,13 @@ int main (int argc, char *argv[]) {
 		//Task 5:
 		// Closing all the channels
 		MESSAGE_TYPE m = QUIT_MSG;
+		//always send quit_msg to control channel
 		chan.cwrite(&m, sizeof(MESSAGE_TYPE));
+
+		new_channel->cwrite(&m, sizeof(MESSAGE_TYPE));
+		if(use_new_channel){
+			delete new_channel; 
+		}
 
 		//wait for server process to terminate
 		//store termination status of the child process (server)
