@@ -95,7 +95,7 @@ int main (int argc, char *argv[]) {
 		cout << "For person " << p << ", at time " << t << ", the value of ecg " << e << " is " << reply << endl;
 		
 		//Request 1000 data points for both ecg for given patient
-		ofstream outputFile("x1.csv");
+		ofstream outputFile("received/x1.csv");
 		if(!outputFile.is_open()){
 			cerr << "Error opening file" << endl; 
 			exit(1); //error with opening file
